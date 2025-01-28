@@ -41,6 +41,9 @@
         document.body.style.textAlign = "left";
       }
 
+      // Unity 인스턴스 생성
+      var unityInstance = null;
+
       createUnityInstance(document.querySelector("#unity-canvas"), {
         dataUrl: "Build/unityTest.data",
         frameworkUrl: "Build/unityTest.framework.js",
@@ -51,7 +54,36 @@
         productVersion: "0.1",
         // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
         // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
+      }).then((instance) => {
+        unityInstance = instance; // Unity 인스턴스 저장
+        console.log("Unity instance created");
       });
+
+      // UnityBridge 설정: React Native에서 메시지 수신 처리
+      window.UnityBridge = {
+        receiveMessage: function (message) {
+          console.log("React Native에서 메시지 수신:", message);
+
+          // Unity로 메시지 전달
+          if (unityInstance && unityInstance.SendMessage) {
+            try {
+              const { itemName, action } = JSON.parse(message); // 메시지 파싱
+              unityInstance.SendMessage(
+                "ItemManager",
+                "UpdateItemState",
+                JSON.stringify({ itemName, action })
+              );
+              console.log(
+                `Unity로 메시지 전송: itemName=${itemName}, action=${action}`
+              );
+            } catch (error) {
+              console.error("메시지 처리 중 오류 발생:", error);
+            }
+          } else {
+            console.warn("Unity instance가 아직 준비되지 않았습니다.");
+          }
+        },
+      };
     </script>
   </body>
 </html>
