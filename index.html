@@ -56,17 +56,26 @@
       // UnityBridge 설정: React Native에서 메시지 수신 처리
       window.UnityBridge = {
         receiveMessage: function (message) {
+          // 수신된 메시지 확인을 위한 알림
           console.log("React Native에서 메시지 수신:", message);
 
           // Unity로 메시지 전달
           if (unityInstance && unityInstance.SendMessage) {
             try {
-              const { itemName, action } = JSON.parse(message); // 메시지 파싱
+              // JSON 파싱
+              const parsedMessage = JSON.parse(message);
+
+              // 필요한 데이터 추출
+              const eventName = parsedMessage.eventName; // 이벤트 이름
+              const action = parsedMessage.data.action; // 액션 값
+
+              // 추출된 데이터를 Unity로 전송
               unityInstance.SendMessage(
-                "TouchManager",
-                "UpdateCharacterState",
-                JSON.stringify({ itemName, action })
+                "TouchManager", // Unity에서 처리할 GameObject 이름
+                "UpdateCharacterState", // Unity 메서드 이름
+                JSON.stringify({ eventName, action }) // Unity로 전달할 데이터 (JSON 형식)
               );
+
               console.log(
                 `Unity로 메시지 전송: itemName=${itemName}, action=${action}`
               );
